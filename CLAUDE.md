@@ -34,6 +34,8 @@ Funciones:
 
 ## Importante: la IA hoy no funciona fuera de claude.ai
 
+Por eso la versión con IA (la que se promociona) es el artifact de claude.ai https://claude.ai/artifact/Gzvi7Gf4RMBbf948VpT6Zk, compartido con link público: cada visitante usa su propia cuenta de Claude, sin costo para el proyecto. Se publica desde este mismo `index.html` sin el script de GoatCounter ni la frase de medición (ahí no corre), con las capacidades `sample` y `downloads` ("Guardar imagen" dentro de claude.ai solo funciona a través de `downloads`). Con IA disponible, a los tres pensamientos el paso destacado es **Leer mi espejo**; sin IA, **¿Y ahora?**. El aviso de privacidad cambia solo según haya IA o no (`privNo` / `privIA`).
+
 Las funciones de Claude usan `window.claude.use('sample')`, que solo existe cuando la página se abre como artifact dentro de claude.ai. Abierta como archivo suelto o en otro hosting, esos botones se ocultan solos y el resto funciona igual.
 
 Para que funcione de forma independiente hace falta un backend chico que llame a la API de Anthropic. **Nunca poner la API key en el navegador.** Los prompts actuales están en el código (buscar `const prompt=` en `index.html`) y sirven de punto de partida.

@@ -110,7 +110,7 @@ button:hover{border-color:var(--borde-fuerte)}
 #acerca .socorro{padding:14px;border:1px solid rgba(255,179,161,.35);border-radius:12px;color:var(--tinta)}
 #acerca a{color:var(--tinta)}
 #guiaBtn{color:var(--tinta);border-color:var(--borde-fuerte)}
-#guiaBtn.llama{animation:llama 2.4s ease-in-out 3}
+#guiaBtn.llama,#leer.llama{animation:llama 2.4s ease-in-out 3}
 @keyframes llama{50%{border-color:var(--tinta);box-shadow:0 0 18px rgba(255,255,255,.18)}}
 #guia{position:fixed;right:22px;top:calc(110px + env(safe-area-inset-top,0px));width:min(380px,calc(100% - 44px));max-height:calc(100% - 300px);overflow:auto;background:var(--vidrio);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--borde);border-radius:18px;padding:20px;transition:opacity .5s,transform .5s;z-index:2}
 #guia.fuera{opacity:0;transform:translateX(16px);pointer-events:none}
@@ -183,8 +183,9 @@ body.dormido .panel{opacity:0;transform:translate(-50%,20px)}
   <div class="et"><span>Espejo interior</span><button type="button" id="acercaCerrar">Cerrar</button></div>
   <h2>Un lugar para mirar tu cabeza desde afuera</h2>
   <p>Sirve para cuando tenés la cabeza llena y todo da vueltas mezclado. Escribí lo que te da vueltas, una cosa por vez, y elegí si es una idea, una duda, una emoción o un recuerdo, y cuánto te pesa. Verlo afuera ayuda a darte cuenta de qué es lo que más pesa.</p>
+  <p id="acercaIA" hidden>Cuando soltaste tres, tocá <b>Leer mi espejo</b>: Claude mira lo que escribiste y te devuelve lo que ve, con una pregunta para pensar. También podés tocar un pensamiento y elegir <b>Explorar</b> para que te haga preguntas de a una.</p>
   <p>Cuando soltaste tres, tocá <b>¿Y ahora?</b>: te muestra qué pesa más, te hace una pregunta y te invita a dejar ir algo. También podés tocar un pensamiento para verlo, arrastrarlo sobre otro para unirlos o hacer doble clic para dejarlo ir.</p>
-  <p><b>Tu privacidad.</b> Lo que escribís se guarda solo en este navegador. No se manda a ningún servidor y nadie más lo ve. Contamos visitas y clics de forma anónima, sin cookies y sin leer nunca lo que escribís.</p>
+  <p><b>Tu privacidad.</b> Lo que escribís se guarda solo en este navegador.<span id="privNo"> No se manda a ningún servidor y nadie más lo ve.</span><span id="privIA" hidden> Solo cuando tocás «Leer mi espejo» o «Explorar», esos pensamientos se mandan a Claude para que te responda.</span> Contamos visitas y clics de forma anónima, sin cookies y sin leer nunca lo que escribís.</p>
   <p><b>No es terapia.</b> Es una herramienta para pensar con más claridad, no reemplaza a un profesional.</p>
   <p class="socorro"><b>Si estás pasando un mal momento</b> o pensás en hacerte daño, no lo atravieses en soledad: hablá ahora con alguien. En Argentina: Línea de Salud Mental <a href="tel:08009990091">0800-999-0091</a> (gratis, las 24 h), Centro de Asistencia al Suicida <a href="tel:135">135</a> desde CABA y GBA o <a href="tel:+541152751135">(011) 5275-1135</a> desde todo el país, emergencias <a href="tel:911">911</a>. En otros países: <a href="https://findahelpline.com/es" target="_blank" rel="noopener">findahelpline.com</a>.</p>
 </aside>
@@ -226,7 +227,7 @@ let W,H,dpr=Math.min(devicePixelRatio||1,innerWidth<700?1.5:2);let ultimoAncho=0
 function size(){W=innerWidth;H=innerHeight;if(W===ultimoAncho&&Math.abs(H-cv.height/dpr)<160&&cv.height){return}ultimoAncho=W;cv.width=W*dpr;cv.height=H*dpr;x.setTransform(dpr,0,0,dpr,0,0)}
 size();addEventListener('resize',size);
 
-let guia=null,avisoGuia=false;
+let guia=null,avisoGuia=false,sample=null;
 let tipo='idea',peso=3,nodos=[],lazos=[],ondas=[],chispas=[],burbujas=[],t=0,ejemplos=false,despierto=0,hover=null,abierto=null;
 const mouse={x:-999,y:-999,vx:0,vy:0};let drag=null,inicio=null;
 
@@ -299,7 +300,7 @@ lazos.push({a:nodos[1],b:nodos[0],pr:1});eco('Estos son ejemplos. Escribí abajo
 function eco(s){const e=$('eco');e.style.opacity=0;e.style.transform='translateY(-4px)';setTimeout(()=>{e.textContent=s;e.style.opacity=1;e.style.transform='none'},350)}
 const NOM={idea:'tus ideas',duda:'tus dudas',emoción:'lo que sentís',recuerdo:'tus recuerdos'};
 function resumen(){actualizarGuia();const ns=nodos.filter(n=>!n.ej);if(!ns.length){eco('Todo en silencio. Soltá algo.');return}
-if(ns.length===3&&!avisoGuia){avisoGuia=true;$('guiaBtn').classList.add('llama');eco('Ya soltaste tres. Cuando quieras, tocá «¿Y ahora?» para mirarlos juntos.');return}
+if(ns.length===3&&!avisoGuia){avisoGuia=true;if(sample){$('leer').classList.add('llama');eco('Ya soltaste tres. Tocá «Leer mi espejo» y Claude te devuelve lo que ve.')}else{$('guiaBtn').classList.add('llama');eco('Ya soltaste tres. Cuando quieras, tocá «¿Y ahora?» para mirarlos juntos.')}return}
 const c={};ns.forEach(n=>c[n.tp]=(c[n.tp]||0)+n.p);const top=Object.keys(c).sort((a,b)=>c[b]-c[a])[0];
 const viejo=ns.reduce((a,b)=>a.born<b.born?a:b);
 eco(ns.length===1?'Un pensamiento. Ya empezó a brillar.':'Hoy '+(top==='emoción'?'pesa':'pesan')+' más '+NOM[top]+'. Lo que más tiempo lleva: «'+viejo.t+'».')}
@@ -338,7 +339,9 @@ $('acercaCerrar').onclick=()=>$('acerca').classList.add('fuera');
 $('guardarImg').onclick=()=>{const k=document.createElement('canvas');k.width=cv.width;k.height=cv.height;const g=k.getContext('2d');g.drawImage(cv,0,0);g.scale(dpr,dpr);
 g.fillStyle='rgba(242,240,245,.85)';g.font='28px "Instrument Serif", Georgia, serif';g.textAlign='left';g.fillText('Espejo interior',24,H-52);
 g.fillStyle='rgba(161,159,171,.8)';g.font='13px Manrope, system-ui, sans-serif';g.fillText(URL_PUBLICA.replace(/^https:\/\//,'').replace(/\/$/,''),24,H-28);
-k.toBlob(b=>{if(!b)return;const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='mi-espejo-interior.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)},'image/png');eco('Te guardé la imagen de tu espejo.');medir('guardar-imagen')};
+k.toBlob(async b=>{if(!b)return;let dl=null;try{dl=window.claude?await window.claude.use('downloads'):null}catch(e){}
+if(dl){try{await dl.save({filename:'mi-espejo-interior.png',data:b})}catch(e){}return}
+const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='mi-espejo-interior.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)},'image/png');eco('Te guardé la imagen de tu espejo.');medir('guardar-imagen')};
 $('compartir').onclick=()=>{const u=/^https?:$/.test(location.protocol)&&!/claude|localhost/.test(location.hostname)?location.origin+location.pathname:URL_PUBLICA;
 open('https://x.com/intent/post?text='+encodeURIComponent('Escribí lo que tengo en la cabeza y lo vi flotar como luces. Probalo:')+'&url='+encodeURIComponent(u),'_blank','noopener');medir('compartir')};
 function cerca(px,py,lim=34){let b=null,bd=lim;nodos.forEach(n=>{const d=Math.hypot(n.x-px,n.y-py);if(d<bd){bd=d;b=n}});return b}
@@ -352,10 +355,10 @@ cv.addEventListener('dblclick',e=>{const n=cerca(e.clientX,e.clientY);if(n){cerr
 cv.addEventListener('pointerleave',()=>{mouse.x=-999;if(!drag)hover=null});
 function unido(n,f){return lazos.some(l=>(l.a===n&&l.b===f)||(l.b===n&&l.a===f))}
 
-let sample=null,ctl=null;
-(async()=>{try{sample=window.claude?await window.claude.use('sample'):null}catch(e){sample=null}if(sample)$('leer').hidden=false})();
+let ctl=null;
+(async()=>{try{sample=window.claude?await window.claude.use('sample'):null}catch(e){sample=null}if(sample){$('leer').hidden=false;$('privNo').hidden=true;$('privIA').hidden=false;$('acercaIA').hidden=false}})();
 $('cerrarLectura').onclick=()=>{$('lectura').classList.add('fuera');if(ctl)ctl.abort()};
-$('leer').onclick=async()=>{if(!sample)return;const ns=nodos.filter(n=>!n.ej);const usa=ns.length?ns:nodos;
+$('leer').onclick=async()=>{if(!sample)return;$('leer').classList.remove('llama');medir('leer');const ns=nodos.filter(n=>!n.ej);const usa=ns.length?ns:nodos;
 terminarExplorar();cerrarGuia();const lp=$('lectura'),lt=$('lecturaTxt');lp.classList.remove('fuera');
 if(!usa.length){lt.className='';lt.textContent='Todavía no hay nada para leer. Soltá un par de pensamientos y volvé a tocar.';return}
 lt.className='esperando';lt.textContent='Mirando tu espejo…';
